@@ -21,15 +21,6 @@ jobs:
           - name: operator
             dockerfile: ./images/operator/Dockerfile
 
-          - name: operator-aws
-            dockerfile: ./images/operator/Dockerfile
-
-          - name: operator-azure
-            dockerfile: ./images/operator/Dockerfile
-
-          - name: operator-alibabacloud
-            dockerfile: ./images/operator/Dockerfile
-
           - name: operator-generic
             dockerfile: ./images/operator/Dockerfile
 
@@ -78,7 +69,7 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            ${{ github.repository_owner }}/${{ matrix.name }}:${{ steps.tag.outputs.tag }}
+            ${{ secrets.DOCKER_HUB_RELEASE_USERNAME }}/${{ matrix.name }}:${{ steps.tag.outputs.tag }}
             quay.io/${{ github.repository_owner }}/${{ matrix.name }}:${{ steps.tag.outputs.tag }}
             quay.io/${{ github.repository_owner }}/${{ matrix.name }}-ci:${{ github.sha }}
           build-args: |
@@ -106,15 +97,6 @@ jobs:
           name: image-digest ${{ matrix.name }}
           path: image-digest
           retention-days: 10
-
-      - name: Send slack notification
-        if: ${{ !success() && (github.event_name == 'schedule' || github.event_name == 'push') }}
-        uses: 8398a7/action-slack@a74b761b4089b5d730d813fbedcd2ec5d394f3af
-        with:
-          status: ${{ job.status }}
-          fields: repo,message,commit,author,action,eventName,ref,workflow,job,took # selectable (default: repo,message)
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   image-digests:
     name: Display Digests
