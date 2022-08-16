@@ -35,7 +35,7 @@ clang -O2 -Wall -target bpf -c test_tc_tunnel.c -o test_tc_tunnel.o
 #
 # The LB cilium does not connect to the kube-apiserver. For now we use Kind
 # just to create Docker-in-Docker containers.
-kind create cluster --config kind-config.yaml --image=brb0/kindest-node:v1.23.3-ubuntu-22.04
+kind create cluster --config kind-config.yaml --image=kindest/node:v1.24.3
 
 # Create additional veth pair which is going to be used to test XDP_REDIRECT.
 ip l a l4lb-veth0 type veth peer l4lb-veth1
@@ -65,7 +65,6 @@ helm install cilium ${HELM_CHART_DIR} \
     --set loadBalancer.dsrDispatch=ipip \
     --set devices='{eth0,l4lb-veth1}' \
     --set nodePort.directRoutingDevice=eth0 \
-    --set ipv6.enabled=false \
     --set affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].key="kubernetes.io/hostname" \
     --set affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].operator=In \
     --set affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].values[0]=kind-control-plane

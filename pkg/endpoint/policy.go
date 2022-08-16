@@ -176,7 +176,8 @@ func (e *Endpoint) setNextPolicyRevision(revision uint64) {
 // while it fails for other endpoints.
 //
 // Returns:
-//  - err: any error in obtaining information for computing policy, or if
+//   - err: any error in obtaining information for computing policy, or if
+//
 // policy could not be generated given the current set of rules in the
 // repository.
 // Must be called with endpoint mutex held.
@@ -534,9 +535,9 @@ func (e *Endpoint) setRegenerateStateLocked(regenMetadata *regeneration.External
 // RegenerateIfAlive queue a regeneration of this endpoint into the build queue
 // of the endpoint and returns a channel that is closed when the regeneration of
 // the endpoint is complete. The channel returns:
-//  - false if the regeneration failed
-//  - true if the regeneration succeed
-//  - nothing and the channel is closed if the regeneration did not happen
+//   - false if the regeneration failed
+//   - true if the regeneration succeed
+//   - nothing and the channel is closed if the regeneration did not happen
 func (e *Endpoint) RegenerateIfAlive(regenMetadata *regeneration.ExternalRegenerationMetadata) <-chan bool {
 	regen, err := e.SetRegenerateStateIfAlive(regenMetadata)
 	if err != nil {
@@ -823,7 +824,12 @@ func (e *Endpoint) UpdateNoTrackRules(annoCB AnnotationsResolverCB) {
 		e.getLogger().WithError(err).Error("Unable to enqueue endpoint notrack event")
 		return
 	}
-	<-ch
+
+	updateRes := <-ch
+	regenResult, ok := updateRes.(*EndpointRegenerationResult)
+	if ok && regenResult.err != nil {
+		e.getLogger().WithError(regenResult.err).Error("EndpointNoTrackEvent event failed")
+	}
 }
 
 // UpdateVisibilityPolicy updates the visibility policy of this endpoint to
@@ -840,7 +846,12 @@ func (e *Endpoint) UpdateVisibilityPolicy(annoCB AnnotationsResolverCB) {
 		e.getLogger().WithError(err).Error("Unable to enqueue endpoint policy visibility event")
 		return
 	}
-	<-ch
+
+	updateRes := <-ch
+	regenResult, ok := updateRes.(*EndpointRegenerationResult)
+	if ok && regenResult.err != nil {
+		e.getLogger().WithError(regenResult.err).Error("EndpointPolicyVisibilityEvent event failed")
+	}
 }
 
 // UpdateBandwidthPolicy updates the egress bandwidth of this endpoint to
@@ -854,7 +865,12 @@ func (e *Endpoint) UpdateBandwidthPolicy(annoCB AnnotationsResolverCB) {
 		e.getLogger().WithError(err).Error("Unable to enqueue endpoint policy bandwidth event")
 		return
 	}
-	<-ch
+
+	updateRes := <-ch
+	regenResult, ok := updateRes.(*EndpointRegenerationResult)
+	if ok && regenResult.err != nil {
+		e.getLogger().WithError(regenResult.err).Error("EndpointPolicyBandwidthEvent event failed")
+	}
 }
 
 // GetRealizedPolicyRuleLabelsForKey returns the list of policy rule labels

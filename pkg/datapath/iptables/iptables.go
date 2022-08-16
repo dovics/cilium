@@ -234,6 +234,17 @@ func (m *IptablesManager) removeCiliumRules(table string, prog iptablesInterface
 			continue
 		}
 
+		// Temporary fix while Iptables is upgraded to >= 1.8.5
+		// (See GH-20884).
+		//
+		// The version currently shipped with Cilium (1.8.4) does not
+		// support the deletion of NOTRACK rules, so we will just ignore
+		// them here and let the agent remove them when it deletes the
+		// entire chain.
+		if strings.Contains(rule, "-j NOTRACK") {
+			continue
+		}
+
 		// do not remove feeder for chains that are set to be disabled
 		// ie catch the beginning of the rule like -A POSTROUTING to match it against
 		// disabled chains
@@ -1270,6 +1281,7 @@ func (m *IptablesManager) installHostTrafficMarkRule(prog iptablesInterface) err
 	matchFromIPSecDecrypt := fmt.Sprintf("%#08x/%#08x", linux_defaults.RouteMarkEncrypt, linux_defaults.RouteMarkMask)
 	matchFromProxy := fmt.Sprintf("%#08x/%#08x", linux_defaults.MagicMarkIsProxy, linux_defaults.MagicMarkProxyMask)
 	matchFromProxyEPID := fmt.Sprintf("%#08x/%#08x", linux_defaults.MagicMarkIsProxyEPID, linux_defaults.MagicMarkProxyMask)
+	matchFromDNSProxy := fmt.Sprintf("%#08x/%#08x", linux_defaults.MagicMarkIdentity, linux_defaults.MagicMarkHostMask)
 	markAsFromHost := fmt.Sprintf("%#08x/%#08x", linux_defaults.MagicMarkHost, linux_defaults.MagicMarkHostMask)
 
 	return prog.runProg([]string{
@@ -1279,6 +1291,7 @@ func (m *IptablesManager) installHostTrafficMarkRule(prog iptablesInterface) err
 		"-m", "mark", "!", "--mark", matchFromIPSecEncrypt, // Don't match ipsec traffic
 		"-m", "mark", "!", "--mark", matchFromProxy, // Don't match proxy traffic
 		"-m", "mark", "!", "--mark", matchFromProxyEPID, // Don't match proxy traffic
+		"-m", "mark", "!", "--mark", matchFromDNSProxy, // Don't match DNS proxy egress traffic
 		"-m", "comment", "--comment", "cilium: host->any mark as from host",
 		"-j", "MARK", "--set-xmark", markAsFromHost})
 }

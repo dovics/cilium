@@ -109,7 +109,7 @@ func (e *Endpoint) PolicyRevisionBumpEvent(rev uint64) {
 	}
 }
 
-/// EndpointNoTrackEvent contains all fields necessary to update the NOTRACK rules.
+// EndpointNoTrackEvent contains all fields necessary to update the NOTRACK rules.
 type EndpointNoTrackEvent struct {
 	ep     *Endpoint
 	annoCB AnnotationsResolverCB
@@ -288,7 +288,7 @@ func (ev *EndpointPolicyBandwidthEvent) Handle(res chan interface{}) {
 			err = bwmap.Update(e.ID, bps)
 		}
 	} else {
-		err = bwmap.Delete(e.ID)
+		err = bwmap.SilentDelete(e.ID)
 	}
 	if err != nil {
 		res <- &EndpointRegenerationResult{

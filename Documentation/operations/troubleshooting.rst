@@ -13,7 +13,7 @@ Troubleshooting
 This document describes how to troubleshoot Cilium in different deployment
 modes. It focuses on a full deployment of Cilium within a datacenter or public
 cloud. If you are just looking for a simple way to experiment, we highly
-recommend trying out the :ref:`gs_guide` instead.
+recommend trying out the :ref:`getting_started` guide instead.
 
 This guide assumes that you have read the :ref:`concepts` which explains all
 the components and concepts.
@@ -781,7 +781,7 @@ from your cluster before the failure state is lost.
 Automatic log & state collection
 --------------------------------
 
-.. include:: ../gettingstarted/cli-download.rst
+.. include:: ../installation/cli-download.rst
 
 Then, execute ``cilium sysdump`` command to collect troubleshooting information
 from your Kubernetes cluster:

@@ -659,16 +659,6 @@ int tail_nodeport_nat_ipv6_egress(struct __ctx_buff *ctx)
 
 		BPF_V6(target.addr, ROUTER_IP);
 		fib_params.l.ifindex = ENCAP_IFINDEX;
-
-		/* fib lookup not necessary when going over tunnel. */
-		if (eth_store_daddr(ctx, fib_params.l.dmac, 0) < 0) {
-			ret = DROP_WRITE_ERROR;
-			goto drop_err;
-		}
-		if (eth_store_saddr(ctx, fib_params.l.smac, 0) < 0) {
-			ret = DROP_WRITE_ERROR;
-			goto drop_err;
-		}
 	}
 #endif
 	ret = snat_v6_process(ctx, NAT_DIR_EGRESS, &target);
@@ -956,12 +946,6 @@ static __always_inline int rev_nodeport_lb6(struct __ctx_buff *ctx, int *ifindex
 					return ret;
 
 				*ifindex = ENCAP_IFINDEX;
-
-				/* fib lookup not necessary when going over tunnel. */
-				if (eth_store_daddr(ctx, fib_params.dmac, 0) < 0)
-					return DROP_WRITE_ERROR;
-				if (eth_store_saddr(ctx, fib_params.smac, 0) < 0)
-					return DROP_WRITE_ERROR;
 
 				return CTX_ACT_OK;
 			}
@@ -1742,16 +1726,6 @@ int tail_nodeport_nat_egress_ipv4(struct __ctx_buff *ctx)
 
 		target.addr = IPV4_GATEWAY;
 		fib_params.l.ifindex = ENCAP_IFINDEX;
-
-		/* fib lookup not necessary when going over tunnel. */
-		if (eth_store_daddr(ctx, fib_params.l.dmac, 0) < 0) {
-			ret = DROP_WRITE_ERROR;
-			goto drop_err;
-		}
-		if (eth_store_saddr(ctx, fib_params.l.smac, 0) < 0) {
-			ret = DROP_WRITE_ERROR;
-			goto drop_err;
-		}
 	}
 #endif
 	ret = snat_v4_process(ctx, NAT_DIR_EGRESS, &target, false);
@@ -1978,7 +1952,7 @@ redo:
 /* Reverse NAT handling of node-port traffic for the case where the
  * backend i) was a local EP and bpf_lxc redirected to us, ii) was
  * a remote backend and we got here after reverse SNAT from the
- * tail_nodeport_nat_ipv4().
+ * tail_nodeport_nat_ingress_ipv4().
  *
  * Also, reverse NAT handling return path egress-gw traffic.
  *
@@ -2002,13 +1976,6 @@ static __always_inline int rev_nodeport_lb4(struct __ctx_buff *ctx, int *ifindex
 
 	if (!revalidate_data(ctx, &data, &data_end, &ip4))
 		return DROP_INVALID;
-
-	tuple.nexthdr = ip4->protocol;
-	tuple.daddr = ip4->daddr;
-	tuple.saddr = ip4->saddr;
-
-	l4_off = l3_off + ipv4_hdrlen(ip4);
-	csum_l4_offset_and_flags(tuple.nexthdr, &csum_off);
 
 #if defined(ENABLE_EGRESS_GATEWAY) && !defined(TUNNEL_MODE) && \
 	__ctx_is != __ctx_xdp
@@ -2040,6 +2007,14 @@ static __always_inline int rev_nodeport_lb4(struct __ctx_buff *ctx, int *ifindex
 		}
 	}
 #endif /* ENABLE_EGRESS_GATEWAY */
+
+	tuple.nexthdr = ip4->protocol;
+	tuple.daddr = ip4->daddr;
+	tuple.saddr = ip4->saddr;
+
+	l4_off = l3_off + ipv4_hdrlen(ip4);
+	csum_l4_offset_and_flags(tuple.nexthdr, &csum_off);
+
 	ret = ct_lookup4(get_ct_map4(&tuple), &tuple, ctx, l4_off, CT_INGRESS, &ct_state,
 			 &monitor);
 
@@ -2148,12 +2123,6 @@ encap_redirect:
 
 	*ifindex = ENCAP_IFINDEX;
 
-	/* fib lookup not necessary when going over tunnel. */
-	if (eth_store_daddr(ctx, fib_params.dmac, 0) < 0)
-		return DROP_WRITE_ERROR;
-	if (eth_store_saddr(ctx, fib_params.smac, 0) < 0)
-		return DROP_WRITE_ERROR;
-
 	return CTX_ACT_OK;
 #endif
 }
@@ -2235,7 +2204,7 @@ health_encap_v4(struct __ctx_buff *ctx, __u32 tunnel_ep,
 	memset(&key, 0, sizeof(key));
 	key.tunnel_id = seclabel == HOST_ID ? LOCAL_NODE_ID : seclabel;
 	key.remote_ipv4 = bpf_htonl(tunnel_ep);
-	key.tunnel_ttl = 64;
+	key.tunnel_ttl = IPDEFTTL;
 
 	if (unlikely(ctx_set_tunnel_key(ctx, &key, sizeof(key),
 					BPF_F_ZERO_CSUM_TX) < 0))
@@ -2255,7 +2224,7 @@ health_encap_v6(struct __ctx_buff *ctx, const union v6addr *tunnel_ep,
 	key.remote_ipv6[1] = tunnel_ep->p2;
 	key.remote_ipv6[2] = tunnel_ep->p3;
 	key.remote_ipv6[3] = tunnel_ep->p4;
-	key.tunnel_ttl = 64;
+	key.tunnel_ttl = IPDEFTTL;
 
 	if (unlikely(ctx_set_tunnel_key(ctx, &key, sizeof(key),
 					BPF_F_ZERO_CSUM_TX |

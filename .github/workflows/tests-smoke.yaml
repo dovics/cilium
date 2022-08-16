@@ -15,7 +15,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  cilium_cli_version: v0.12.0
+  cilium_cli_version: v0.12.1
   KIND_VERSION: v0.11.1
   KIND_CONFIG: .github/kind-config.yaml
   CONFORMANCE_TEMPLATE: examples/kubernetes/connectivity-check/connectivity-check.yaml
@@ -54,15 +54,7 @@ jobs:
           persist-credentials: false
 
       - name: Check pre-flight clusterrole
-        run: |
-          cd install/kubernetes/cilium/templates
-          echo "Checking for differences between preflight and agent clusterrole"
-          diff \
-             -I '^[ ]\{2\}name: cilium.*' \
-             -I '^Keep file in sync with.*' \
-             -I '{{- if.*' \
-             cilium-agent/clusterrole.yaml \
-             cilium-preflight/clusterrole.yaml
+        run: make check-k8s-clusterrole
 
   helm-charts:
     runs-on: ubuntu-latest

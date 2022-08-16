@@ -2155,7 +2155,7 @@ type DaemonConfig struct {
 	// that identifies the service objects Cilium should handle.
 	// If the provided value is an empty string, Cilium will manage service objects when
 	// the label is not present. For more details -
-	// https://github.com/kubernetes/enhancements/blob/master/keps/sig-network/0031-20181017-kube-proxy-services-optional.md
+	// https://github.com/kubernetes/enhancements/tree/master/keps/sig-network/2447-Make-kube-proxy-service-abstraction-optional
 	K8sServiceProxyName string
 
 	// APIRateLimitName enables configuration of the API rate limits
@@ -3129,6 +3129,7 @@ func (c *DaemonConfig) Populate() {
 	}
 
 	// Metrics Setup
+	metrics.ResetMetrics()
 	defaultMetrics := metrics.DefaultMetrics()
 	flagMetrics := append(viper.GetStringSlice(Metrics), c.additionalMetrics()...)
 	for _, metric := range flagMetrics {
