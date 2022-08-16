@@ -178,8 +178,8 @@ HOST_OPTIONS = $(LXC_OPTIONS) \
 ifndef MAX_HOST_OPTIONS
 MAX_HOST_OPTIONS = $(MAX_BASE_OPTIONS) -DENCAP_IFINDEX=1 -DTUNNEL_MODE=1
 
-# Egress Gateway should only be enabled for >= 5.2 kernels
-ifneq (,$(filter $(KERNEL),"54" "netnext"))
+# Egress Gateway shouldn't only be enabled for >= 5.2 kernels
+ifneq (,$(filter $(KERNEL),"49" "netnext"))
 MAX_HOST_OPTIONS += -DENABLE_EGRESS_GATEWAY=1
 endif
 ifeq ("$(KERNEL)","54")
@@ -279,8 +279,8 @@ LXC_OPTIONS = \
 ifndef MAX_LXC_OPTIONS
 MAX_LXC_OPTIONS = $(MAX_BASE_OPTIONS) -DENCAP_IFINDEX=1 -DTUNNEL_MODE=1
 
-# Egress Gateway should only be enabled for >= 5.2 kernels
-ifneq (,$(filter $(KERNEL),"54" "netnext"))
+# Egress Gateway shouldn't only be enabled for >= 5.2 kernels
+ifneq (,$(filter $(KERNEL),"49" "netnext"))
 MAX_LXC_OPTIONS += -DENABLE_EGRESS_GATEWAY=1
 endif
 ifeq ("$(KERNEL)","54")

@@ -34,7 +34,6 @@ import (
 	linuxdatapath "github.com/cilium/cilium/pkg/datapath/linux"
 	"github.com/cilium/cilium/pkg/datapath/linux/bigtcp"
 	"github.com/cilium/cilium/pkg/datapath/linux/ipsec"
-	"github.com/cilium/cilium/pkg/datapath/linux/probes"
 	linuxrouting "github.com/cilium/cilium/pkg/datapath/linux/routing"
 	"github.com/cilium/cilium/pkg/datapath/loader"
 	datapathOption "github.com/cilium/cilium/pkg/datapath/option"
@@ -946,10 +945,10 @@ func NewDaemon(ctx context.Context, cleaner *daemonCleanup, epMgr *endpointmanag
 		}
 	}
 	if option.Config.EnableIPv4EgressGateway {
-		if !probes.NewProbeManager().GetMisc().HaveLargeInsnLimit {
-			log.WithError(err).Error("egress gateway needs kernel 5.2 or newer")
-			return nil, nil, fmt.Errorf("egress gateway needs kernel 5.2 or newer")
-		}
+		// if !probes.NewProbeManager().GetMisc().HaveLargeInsnLimit {
+		// 	log.WithError(err).Error("egress gateway needs kernel 5.2 or newer")
+		// 	return nil, nil, fmt.Errorf("egress gateway needs kernel 5.2 or newer")
+		// }
 
 		// datapath code depends on remote node identities to distinguish between cluser-local and
 		// cluster-egress traffic
