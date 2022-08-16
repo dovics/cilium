@@ -43,13 +43,6 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_RELEASE_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_RELEASE_PASSWORD }}
 
-      - name: Login to quay.io
-        uses: docker/login-action@49ed152c8eca782a232dede0303416e8f356c37b
-        with:
-          registry: quay.io
-          username: ${{ secrets.QUAY_USERNAME_RELEASE_USERNAME }}
-          password: ${{ secrets.QUAY_PASSWORD_RELEASE_PASSWORD }}
-
       - name: Getting image tag
         id: tag
         run: |
@@ -70,8 +63,6 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: |
             ${{ secrets.DOCKER_HUB_RELEASE_USERNAME }}/${{ matrix.name }}:${{ steps.tag.outputs.tag }}
-            quay.io/${{ github.repository_owner }}/${{ matrix.name }}:${{ steps.tag.outputs.tag }}
-            quay.io/${{ github.repository_owner }}/${{ matrix.name }}-ci:${{ github.sha }}
           build-args: |
             OPERATOR_VARIANT=${{ matrix.name }}
 
